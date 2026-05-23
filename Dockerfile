@@ -5,7 +5,6 @@ COPY package.json package-lock.json* ./
 RUN npm install
 COPY index.html vite.config.js ./
 COPY src ./src
-COPY public ./public
 RUN npm run build
 
 # --- Stage 2: Python runtime serving API + WebSocket + built frontend ---
