@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: voice-agent-appointment-booking
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_DEPLOYMENT
+        sync: false
+      - key: AZURE_OPENAI_SUBSCRIPTION_KEY
+        sync: false
+      - key: AZURE_OPENAI_MODEL
+        value: gpt-4o
+      - key: AZURE_OPENAI_API_VERSION
+        value: 2025-01-01-preview
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: CARTESIA_VOICE_ID
+        value: 694f9389-aac1-45b6-b726-9d9369183238
+      - key: CARTESIA_TTS_MODEL
+        value: sonic-2
+      - key: CARTESIA_STT_MODEL
+        value: ink-whisper
+      - key: CARTESIA_VERSION
+        value: "2024-11-13"
