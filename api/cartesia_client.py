@@ -16,6 +16,9 @@ CARTESIA_VOICE_ID = os.environ.get(
 )
 CARTESIA_TTS_MODEL = os.environ.get("CARTESIA_TTS_MODEL", "sonic-2")
 CARTESIA_STT_MODEL = os.environ.get("CARTESIA_STT_MODEL", "ink-whisper")
+# Speech rate: "slowest" | "slow" | "normal" | "fast" | "fastest". Default "fast"
+# so the agent sounds snappier than the (rather slow) Cartesia default.
+CARTESIA_TTS_SPEED = os.environ.get("CARTESIA_TTS_SPEED", "fast")
 
 BASE_URL = "https://api.cartesia.ai"
 
@@ -49,6 +52,7 @@ async def tts(text: str) -> bytes:
             "bit_rate": 128000,
         },
         "language": "en",
+        "speed": CARTESIA_TTS_SPEED,
     }
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.post(

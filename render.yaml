@@ -23,5 +23,7 @@ services:
         value: sonic-2
       - key: CARTESIA_STT_MODEL
         value: ink-whisper
+      - key: CARTESIA_TTS_SPEED
+        value: fast
       - key: CARTESIA_VERSION
         value: "2024-11-13"

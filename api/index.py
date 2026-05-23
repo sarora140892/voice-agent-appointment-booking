@@ -111,9 +111,30 @@ async def session_audio(
     return result
 
 
+def _mask(value: str) -> str:
+    """Mask PII for display: keep the first 2 chars, replace the rest with ***."""
+    value = (value or "").strip()
+    if not value:
+        return ""
+    return value[:2] + "***"
+
+
 @app.get("/api/bookings")
 def bookings() -> dict:
-    return {"bookings": list(reversed(BOOKINGS))}
+    # Mask PII server-side so raw names / emails / phone numbers never leave the
+    # server, and drop the transcript (which also contains PII).
+    masked = [
+        {
+            "id": b["id"],
+            "name": _mask(b["name"]),
+            "service": b["service"],
+            "slot": b["slot"],
+            "contact": _mask(b["contact"]),
+            "created_at": b["created_at"],
+        }
+        for b in reversed(BOOKINGS)
+    ]
+    return {"bookings": masked}
 
 
 @app.websocket("/api/ws")
