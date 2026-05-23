@@ -138,7 +138,8 @@ export default function VoiceSession() {
 
   const onTurnEnd = useCallback((msg) => {
     finalizeStreaming()
-    if (msg.done) { doneRef.current = true; setSummary(msg.summary) }
+    if (msg.summary) setSummary(msg.summary)  // show the card as soon as booked
+    if (msg.done) doneRef.current = true       // end only on goodbye (end_call)
     if (audioRef.current?.isActive()) {
       pendingEndRef.current = msg
     } else if (!sawAudioRef.current && turnTextRef.current.trim()) {

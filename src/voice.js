@@ -67,7 +67,12 @@ export function createAudioQueue({ onLevel, onIdle } = {}) {
   const sources = new Set()
   let nextStart = 0
   let raf = 0
-  let active = 0
+  // `pending` counts chunks pushed-but-not-finished, incremented SYNCHRONOUSLY
+  // in push() (before the async decode) so isActive() is true the instant audio
+  // is queued. Without this, a turn_end arriving right after the last chunk
+  // would see isActive()===false (decode not done yet) and tear down, cutting
+  // off the final sentence.
+  let pending = 0
   let chain = Promise.resolve()  // serialize decode+schedule to preserve order
 
   const tick = () => {
@@ -79,9 +84,14 @@ export function createAudioQueue({ onLevel, onIdle } = {}) {
   }
   const stopMeter = () => { if (raf) { cancelAnimationFrame(raf); raf = 0 } onLevel?.(0) }
 
+  const settleOne = () => {
+    pending = Math.max(0, pending - 1)
+    if (pending === 0) { stopMeter(); nextStart = 0; onIdle?.() }
+  }
+
   async function schedule(arrayBuffer) {
     let audioBuf
-    try { audioBuf = await ac.decodeAudioData(arrayBuffer.slice(0)) } catch { return }
+    try { audioBuf = await ac.decodeAudioData(arrayBuffer.slice(0)) } catch { settleOne(); return }
     try { if (ac.state === 'suspended') await ac.resume() } catch { /* noop */ }
     const src = ac.createBufferSource()
     src.buffer = audioBuf
@@ -89,26 +99,24 @@ export function createAudioQueue({ onLevel, onIdle } = {}) {
     const start = Math.max(ac.currentTime + 0.02, nextStart)
     src.start(start)
     nextStart = start + audioBuf.duration
-    active++
     sources.add(src)
     if (!raf) raf = requestAnimationFrame(tick)
-    src.onended = () => {
-      sources.delete(src)
-      active = Math.max(0, active - 1)
-      if (active === 0) { stopMeter(); nextStart = 0; onIdle?.() }
-    }
+    src.onended = () => { sources.delete(src); settleOne() }
   }
 
   return {
-    push(arrayBuffer) { chain = chain.then(() => schedule(arrayBuffer)) },
+    push(arrayBuffer) {
+      pending++  // synchronous — isActive() reflects this chunk immediately
+      chain = chain.then(() => schedule(arrayBuffer))
+    },
     flush() {
       for (const s of sources) { try { s.onended = null; s.stop() } catch { /* noop */ } }
       sources.clear()
-      active = 0
+      pending = 0
       nextStart = 0
       stopMeter()
     },
-    isActive: () => active > 0,
+    isActive: () => pending > 0,
     close() { this.flush(); try { ac.close() } catch { /* noop */ } },
   }
 }
