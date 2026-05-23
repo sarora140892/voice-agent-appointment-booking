@@ -31,6 +31,9 @@ export async function createVad({ onSpeechStart, onSpeechEnd, onMisfire, onFrame
     model: 'v5',
     baseAssetPath: VAD_ASSET_PATH,
     onnxWASMBasePath: ORT_WASM_PATH,
+    // Don't begin detecting on load — the caller starts it explicitly once the
+    // greeting has finished, so the agent's first line can't be self-interrupted.
+    startOnLoad: false,
     // Single-threaded wasm avoids needing COOP/COEP cross-origin-isolation
     // headers (SharedArrayBuffer) on the dev server.
     ortConfig: (ort) => { ort.env.wasm.numThreads = 1 },

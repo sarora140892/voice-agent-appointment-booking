@@ -30,6 +30,7 @@ export default function VoiceSession() {
   const browserTtsRef = useRef(null)   // fallback TTS controller
 
   const doneRef = useRef(false)
+  const vadStartedRef = useRef(false)  // VAD starts only after the greeting
   const pendingEndRef = useRef(null)   // turn_end held until audio drains
   const sawAudioRef = useRef(false)    // did this turn produce server audio?
   const turnTextRef = useRef('')       // accumulated assistant text this turn
@@ -87,14 +88,24 @@ export default function VoiceSession() {
     vadRef.current = null
   }, [])
 
+  // Start the VAD once, after the greeting (first turn) has finished — so the
+  // agent's opening line can't be cut off by its own echo or room noise.
+  const startVadIfNeeded = useCallback(() => {
+    if (vadRef.current && !vadStartedRef.current) {
+      vadStartedRef.current = true
+      Promise.resolve(vadRef.current.start()).catch(() => {})
+    }
+  }, [])
+
   const applyEnd = useCallback((msg) => {
     if (msg?.done || doneRef.current) {
       setPhase(PHASES.done)
       teardown()
     } else {
       setPhase(PHASES.listening)
+      startVadIfNeeded()
     }
-  }, [teardown])
+  }, [teardown, startVadIfNeeded])
 
   // ---- VAD events ----
   const onSpeechStart = useCallback(() => {
@@ -167,18 +178,19 @@ export default function VoiceSession() {
     setTranscript([])
     setSummary(null)
     doneRef.current = false
+    vadStartedRef.current = false
     pendingEndRef.current = null
     setPhase(PHASES.starting)
     try {
       // Load the neural VAD FIRST (model + ONNX runtime download + mic
       // permission, ~1-2s). Doing this before opening the WS avoids a race where
       // a slow/failed VAD load tears down the socket while the server is greeting.
+      // It is NOT started here — startVadIfNeeded() starts it after the greeting.
       vadRef.current = await createVad({
         onSpeechStart: () => handlersRef.current.onSpeechStart?.(),
         onSpeechEnd: (a) => handlersRef.current.onSpeechEnd?.(a),
         onFrame: (v) => handlersRef.current.onFrame?.(v),
       })
-      await vadRef.current.start()
 
       audioRef.current = createAudioQueue({
         onLevel: setLevel,
@@ -208,6 +220,7 @@ export default function VoiceSession() {
   const reset = useCallback(() => {
     teardown()
     doneRef.current = false
+    vadStartedRef.current = false
     pendingEndRef.current = null
     setPhase(PHASES.idle)
     setTranscript([])
