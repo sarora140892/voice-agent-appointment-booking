@@ -829,6 +829,13 @@ main { display: block; }
   color: var(--accent-2); background: rgba(25,227,194,0.12); border: 1px solid rgba(25,227,194,0.25);
 }
 .status-pill .dot-live { width: 6px; height: 6px; }
+.status-pill.cancelled {
+  color: var(--danger); background: rgba(255,108,108,0.12); border-color: rgba(255,108,108,0.28);
+}
+.check-burst.cancelled {
+  background: linear-gradient(135deg, #ff7a7a, #e23c3c);
+  box-shadow: 0 0 30px rgba(255,108,108,0.5);
+}
 
 /* ================================ FOOTER ================================ */
 

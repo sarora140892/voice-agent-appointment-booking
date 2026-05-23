@@ -131,6 +131,7 @@ def bookings() -> dict:
             "slot": b["slot"],
             "contact": _mask(b["contact"]),
             "created_at": b["created_at"],
+            "status": b.get("status", "confirmed"),
         }
         for b in reversed(BOOKINGS)
     ]

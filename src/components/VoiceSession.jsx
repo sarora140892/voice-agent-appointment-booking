@@ -294,6 +294,14 @@ function CheckGlyph() {
   )
 }
 
+function CrossGlyph() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="glyph">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function PhaseHint({ phase }) {
   const hints = {
     idle: 'Tap to start. Allow your mic, then just talk — you can interrupt the assistant any time.',
@@ -308,11 +316,14 @@ function PhaseHint({ phase }) {
 }
 
 function BookingCard({ summary }) {
+  const cancelled = summary.status === 'cancelled'
   return (
     <div className="booking-card">
       <div className="booking-card-head">
-        <span className="check-burst"><CheckGlyph /></span>
-        <h3>Confirmed</h3>
+        <span className={`check-burst ${cancelled ? 'cancelled' : ''}`}>
+          {cancelled ? <CrossGlyph /> : <CheckGlyph />}
+        </span>
+        <h3>{cancelled ? 'Cancelled' : 'Confirmed'}</h3>
       </div>
       <dl>
         <dt>Reference</dt><dd className="mono">{summary.booking_id}</dd>

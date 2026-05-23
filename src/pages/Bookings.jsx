@@ -92,7 +92,11 @@ export default function Bookings() {
                 <td className="mono" data-label="Contact">{b.contact}</td>
                 <td className="mono" data-label="Created">{new Date(b.created_at).toLocaleString()}</td>
                 <td data-label="Status">
-                  <span className="status-pill"><span className="dot-live" /> Confirmed</span>
+                  {b.status === 'cancelled' ? (
+                    <span className="status-pill cancelled">Cancelled</span>
+                  ) : (
+                    <span className="status-pill"><span className="dot-live" /> Confirmed</span>
+                  )}
                 </td>
               </tr>
             ))}
