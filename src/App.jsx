@@ -48,7 +48,6 @@ function Navbar() {
           <a href="/#security" className="nav-link">Security</a>
           <NavLink to="/bookings" className="nav-link">Bookings</NavLink>
           <div className="nav-cta">
-            <a href="/#demo" className="btn btn-ghost">Sign in</a>
             <a href="/#demo" className="btn btn-primary">Book a demo</a>
           </div>
         </nav>
